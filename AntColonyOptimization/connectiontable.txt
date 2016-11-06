@@ -1,0 +1,152 @@
+Blue Mountains
+4
+Lake Evendim
+250 0 41 
+Michel Delving
+270 65 15
+White Towers
+225 75 21
+Grey Havens
+240 75 21
+Lake Evendim
+2
+Fornost
+85 11 64                               
+Michel Delving
+110 2 55
+Grey Havens
+2
+White Towers
+100 95 8
+Sarn Ford
+270 30 12
+White Towers
+2
+Michel Delving
+40 54 7
+Hobbiton
+70 62 6
+Michel Delving
+2
+Hobbiton
+35 87 1
+Brandy Hall
+80 79 6
+Hobbiton
+3
+Brandy Hall
+50 73 7
+Bree
+100 65 9
+Sarn Ford
+130 47 27
+Brandy Hall
+1
+Bree
+50 68 6
+Bree
+3
+Fornost
+115 41 38
+Weathertop
+100 36 67
+Sarn Ford
+105 40 35
+Fornost
+2
+Weathertop
+160 23 65
+Rivendell
+375 14 58
+Sarn Ford
+3
+Weathertop
+180 13 61
+Rivendell
+400 15 55
+Isengard
+500 0 72
+Weathertop
+1
+Rivendell
+230 50 45
+Rivendell
+4
+North Pass
+100 2 65
+Caradhras
+60 25 69
+Moria
+180 15 90
+Isengard
+500 12 85
+North Pass
+1
+Carrock
+80 0 75
+Caradhras
+3
+Carrock
+70 0 78
+Gladden Fields
+150 12 65
+Lothlorien
+300 32 55
+Moria
+2
+Gladden Fields
+140 16 85
+Lothlorien
+20 21 72
+Gladden Fields
+3
+Esgaroth
+400 0 63
+Dol Guldur
+175 2 82
+Lothlorien
+190 18 62
+Lothlorien
+2
+Dol Guldur
+180 0 85
+Isengard
+240 28 80
+Carrock
+4
+Wood Elves
+175 12 64
+Erebor
+250 18 75
+Esgaroth
+240 24 75
+Dol Guldur
+300 0 85
+Dol Guldur
+1
+Isengard
+390 0 83
+Wood Elves
+2
+Dale
+90 84 31
+Erebor
+100 90 31
+Esgaroth
+3
+Dale
+40 95 10
+Erebor
+50 98 8
+Iron Hills
+175 82 38
+Dale
+2
+Erebor
+10 99 5
+Iron Hills
+180 87 35
+Erebor
+1
+Iron Hills
+200 91 35
