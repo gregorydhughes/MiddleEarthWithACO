@@ -58,7 +58,7 @@ void Graph::antCycles() {
 }
 
 void Graph::updateProbabilies() {
-	for (int i = 0; i < 25; i++)
+	for (int i = 0; i < locCounter; i++)
 		updateProbability(i, locations[i].edgeCount);
 }
 
@@ -93,7 +93,7 @@ double Graph::getSumOfWeights(int node, int edgeCount) {
 }
 
 void Graph::decayPheremones() {
-	for (int i = 0; i < 25; i++)
+	for (int i = 0; i < locCounter; i++)
 		decayPheremone(i, locations[i].edgeCount);
 }
 
