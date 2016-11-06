@@ -8,6 +8,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <time.h>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -20,15 +21,20 @@
 using namespace std;
 
 const string GOAL_LOCATION = "Iron Hills";
+const int TOTAL_PHEREMONE = 100;
+const int CYCLES = 25;
+const int TOTAL_ANTS = 10;
 
-class Graph {	
+class Graph {
 
 private:
-
+	
 	// Edge with opposite location, distance, road quality and risk level 
 	struct Edge {
 		string to;
-		int distance, roadQuality, riskLevel;
+		int distance;
+		double pheremone;
+		double probability;
 	};
 
 	// Node with current location distance to GOAL_LOCATION and a list of edges as well as edge count
@@ -40,23 +46,13 @@ private:
 		bool visited;
 	};
 
-	struct Path {
+	struct Ant {
 		int location;
 		vector<int> path;
-		int pathSum;
-		int fn;		
+		int pathSum;	
 	};
-
-	struct ComparePath : public binary_function<Path*, Path*, bool> {
-		bool operator()(const Path* lhs, const Path* rhs) const {
-			return lhs->fn > rhs->fn;
-		}
-	};
-
-	Path* finalPath;
-
-	int pathCounter;
-	priority_queue<Path*, vector<Path*>, ComparePath> paths;
+		
+	Ant *ants;
 
 	int locCounter;
 	Node locations[25];
@@ -82,21 +78,36 @@ private:
 	// Parameters : from - the current location
 	//                to - the location the edge goes to
 	//                 d - the distance of the edge
-	//                rq - the road quality of the edge
-	//                rl - the risk level of the edge
 	// Post-Condition: addes an edge to the from node
-	void addEdge(string from, string to, int d, int rq, int rl);
+	void addEdge(string from, string to, int d);
 
 	// Parameters: node - string name of the node wanted
 	// Returns: the node with the name passed in
 	int getNode(string node);
 
-	int calculateFn(int g, int h);
-	int getHeuristic(Edge e, Heuristics h);
+	int alpha, beta, rho;
 
-	void addPath(int loc, int fn, int heur, int parent, const Path* curr);
+	void runACO(double alpha, double beta, double rho);
 
+	void initializeAnts();	
+	void antCycles();
+	bool allAntsAtGoal();
+	bool antAtGoal(int i);
+	void antsMove();
+	bool antMove(int ant);
+	bool updateAnt(int ant, int newLocation, int newPathSum);
+	bool containNode(int ant, int to);
 
+	void addPheremones();
+	double getPheremone(int pathSum);
+	void addPheremone(int current, int next, int pathSum);
+	void decayPheremones();
+	void decayPheremone(int node, int edgeCount);
+	void updateProbabilies();
+	void updateProbability(int node, int edgeCount);
+	double getSumOfWeights(int node, int edgeCount);
+	
+	
 public:
 	// Graph Constuctor
 	// Parameters: nodesWithDistances - take a specificly formatted file's name and 
@@ -105,10 +116,6 @@ public:
 
 	// Parameters: nodeConnData - a file of a specific format for adding edges
 	void addEdges(string nodeConnData);
-
-
-	void aStar(string start, Heuristics h);
-	
 
 	// Post-Condition: Builds a string of all the node data and prints
 	// Returns: printLocs - the constructed string of data
