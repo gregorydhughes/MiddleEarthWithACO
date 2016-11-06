@@ -87,7 +87,7 @@ double Graph::getSumOfWeights(int node, int edgeCount) {
 	for (int i = 0; i < edgeCount; i++) {
 		double weightedPheremone = pow(locations[node].edges[i].pheremone, alpha);
 		double weightedDistance = pow((1.0 / (double)locations[node].edges[i].distance), beta);
-		double weightedSum = weightedSum + (weightedPheremone * weightedDistance);
+		weightedSum = weightedSum + (weightedPheremone * weightedDistance);
 	}
 	return weightedSum;
 }
@@ -140,11 +140,11 @@ double Graph::getPheremone(int pathSum) {
 
 void Graph::antsMove() {
 	for (int i = 0; i < TOTAL_ANTS; i++)
-		if (!antAtGoal)
+		if (!antAtGoal(i))
 			antMove(i);
 }
 
-bool Graph::antMove(int ant) {
+void Graph::antMove(int ant) {
 	// max pheremone
 	int maxProbability = 0;
 
@@ -188,10 +188,12 @@ bool Graph::containNode(int ant, int to) {
 	return false;
 }
 
-bool Graph::updateAnt(int ant, int newLocation, int newPathSum) {
+void Graph::updateAnt(int ant, int newLocation, int newPathSum) {
 	ants[ant].pathSum = newPathSum;
 	ants[ant].location = newLocation;
 	ants[ant].path.push_back(newLocation);
+
+
 }
 
 bool Graph::allAntsAtGoal() {
@@ -304,5 +306,12 @@ string Graph::intToString(int i) {
 // Post-Condition: Builds a string of all the node data and prints
 // Returns: printLocs - the constructed string of data
 string Graph::toString() {
-	return "";
+	string ans;
+
+	ans = locations[0].locationName;
+
+	for (int i = 1; i < MAX_LOCATIONS; i++)
+		ans += ", " + locations[i].locationName;
+	
+	return ans;
 }

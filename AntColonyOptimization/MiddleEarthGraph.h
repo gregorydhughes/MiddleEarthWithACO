@@ -25,6 +25,8 @@ const int TOTAL_PHEREMONE = 100;
 const int CYCLES = 25;
 const int TOTAL_ANTS = 10;
 
+const int MAX_LOCATIONS = 25;
+
 class Graph {
 
 private:
@@ -55,7 +57,7 @@ private:
 	Ant *ants;
 
 	int locCounter;
-	Node locations[25];
+	Node locations[MAX_LOCATIONS];
 
 	// Parameters: i - the int to be converted to a string
 	// Returns: the string of a passed in int
@@ -87,15 +89,15 @@ private:
 
 	int alpha, beta, rho;
 
-	void runACO(double alpha, double beta, double rho);
+
 
 	void initializeAnts();	
 	void antCycles();
 	bool allAntsAtGoal();
 	bool antAtGoal(int i);
 	void antsMove();
-	bool antMove(int ant);
-	bool updateAnt(int ant, int newLocation, int newPathSum);
+	void antMove(int ant);
+	void updateAnt(int ant, int newLocation, int newPathSum);
 	bool containNode(int ant, int to);
 
 	void addPheremones();
@@ -117,6 +119,9 @@ public:
 	// Parameters: nodeConnData - a file of a specific format for adding edges
 	void addEdges(string nodeConnData);
 
+	//
+	void runACO(double alpha, double beta, double rho);
+	
 	// Post-Condition: Builds a string of all the node data and prints
 	// Returns: printLocs - the constructed string of data
 	string toString();
