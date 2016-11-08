@@ -38,6 +38,7 @@ Graph::Graph(string nodesWithDistances) {
 }
 
 void Graph::runACO(double alpha, double beta, double rho) {
+	int x;
 	this->alpha = alpha;
 	this->beta = beta;
 	this->rho = rho;
@@ -47,59 +48,105 @@ void Graph::runACO(double alpha, double beta, double rho) {
 	
 }
 
+void Graph::initializeAnts() {
+	ants = new Ant[TOTAL_ANTS];
+	int start = getNode("Blue Mountains");
+	for (int i = 0; i < TOTAL_ANTS; i++) {
+		ants[i].location = start;
+		ants[i].path.push_back(start);
+		ants[i].pathSum = 0;
+	}
+}
+
 void Graph::antCycles() {
+
 	for (int i = 0; i < CYCLES; i++) {
-		while (!allAntsAtGoal())
-			antsMove();
 		addPheremones();
 		decayPheremones();
-		updateProbabilies();
+		updateProbabilities();
+
+		while (!allAntsAtGoal())
+			antsMove();		
 	}
 }
 
-void Graph::updateProbabilies() {
-	for (int i = 0; i < locCounter; i++)
-		updateProbability(i, locations[i].edgeCount);
+void Graph::antsMove() {
+	for (int i = 0; i < TOTAL_ANTS; i++)
+		if (!antAtGoal(i))
+			antMove(i);
 }
 
-void Graph::updateProbability(int node, int edgeCount) {
+void Graph::antMove(int ant) {	
+	Edge edge = getNextEdge(ant);
+	
+	// the new values for the ant that moved
+	int newLocation = getNode(edge.to);
+	int newPathSum = ants[ant].pathSum + edge.distance;
 
-	// get the sum of all the edge weights for the denominator
-	int denominator = getSumOfWeights(node, edgeCount);
+	// updates that ants new location and path and path sum
+	updateAnt(ant, newLocation, newPathSum);
+}
 
-	for (int i = 0; i < edgeCount; i++) {
-		// get the pherimone weighter with alpha
-		double weightedPheremone = pow(locations[node].edges[i].pheremone, alpha);
+Graph::Edge Graph::getNextEdge(int ant) {
+	
+	priority_queue<Edge, vector<Edge>, CompareEdge> edges;
 
-		// get the distance weighted with beta
-		double weightedDistance = pow((1.0 / (double)locations[node].edges[i].distance), beta);
+	int size = locations[ants[ant].location].edgeCount;
 
-		// caculate the numerator
-		double numerator = weightedPheremone * weightedDistance;
+	for (int i = 0; i < size; i++) {
+		if (locations[ants[ant].location].edges[i].to.compare("Iron Hills") == 0)
+			return locations[ants[ant].location].edges[i];
+		edges.push(locations[ants[ant].location].edges[i]);
+	}
 
-		// update the probability
-		locations[node].edges[i].probability = (numerator / denominator);
+	Edge edge;	
+	
+	bool empty = false;
+	do {
+		if (edge.to.compare("Iron Hills") == 0)
+			return edge;
+		if (edges.empty())
+			break;
+		edge = edges.top();	
+		edges.pop();		
+	} while (isDeadEnd(ant, edge) || containsNode(ant, getNode(edge.to)));
+
+
+	if (isDeadEnd(ant, edge)) {
+		Edge e;
+		e.distance = getDistance(ants[ant].location, ants[ant].path[ants[ant].path.size() - 2]);
+		e.pheremone = 0;
+		e.probability = 0;
+		e.to = locations[ants[ant].path[ants[ant].path.size() - 2]].locationName;
+		return e;
+	}
+
+	return edge;
+}
+
+int Graph::getDistance(int curr, int next) {
+	int size = locations[curr].edgeCount;
+	for (int i = 0; i < size; i++) {
+		if (getNode(locations[curr].edges[i].to) == next)
+			return locations[curr].edges[i].distance;
 	}
 }
 
-double Graph::getSumOfWeights(int node, int edgeCount) {
-	double weightedSum = 0;
-	for (int i = 0; i < edgeCount; i++) {
-		double weightedPheremone = pow(locations[node].edges[i].pheremone, alpha);
-		double weightedDistance = pow((1.0 / (double)locations[node].edges[i].distance), beta);
-		weightedSum = weightedSum + (weightedPheremone * weightedDistance);
+bool Graph::isDeadEnd(int ant, Edge edge) {
+	int size = locations[getNode(edge.to)].edgeCount;
+	int loc = getNode(edge.to);
+	for (int i = 0; i < size; i++) {		
+		int check = getNode(locations[loc].edges[i].to);
+		if (!containsNode(ant, check))
+			return false;
 	}
-	return weightedSum;
+	return true;
 }
 
-void Graph::decayPheremones() {
-	for (int i = 0; i < locCounter; i++)
-		decayPheremone(i, locations[i].edgeCount);
-}
-
-void Graph::decayPheremone(int node, int edgeCount) {
-	for (int i = 0; i < edgeCount; i++)
-		locations[node].edges[i].pheremone *= (1 - rho);
+void Graph::updateAnt(int ant, int newLocation, int newPathSum) {
+	ants[ant].pathSum = newPathSum;
+	ants[ant].location = newLocation;
+	ants[ant].path.push_back(newLocation);
 }
 
 void Graph::addPheremones() {
@@ -109,7 +156,7 @@ void Graph::addPheremones() {
 		// get the values for updating a path
 		int pathSize = ants[ant].path.size();
 		int pathSum = ants[ant].pathSum;
-		
+
 		// place pheremone on edges in both directions
 		for (int i = 0; i < pathSize - 1; i++) {
 
@@ -134,92 +181,72 @@ void Graph::addPheremone(int current, int next, int pathSum) {
 	}
 }
 
+void Graph::decayPheremones() {
+	for (int i = 0; i < locCounter; i++)
+		decayPheremone(i, locations[i].edgeCount);
+}
+
+void Graph::decayPheremone(int node, int edgeCount) {
+	for (int i = 0; i < edgeCount; i++)
+		locations[node].edges[i].pheremone *= (1 - rho);
+}
+
+void Graph::updateProbabilities() {
+	for (int i = 0; i < locCounter; i++)
+		updateProbability(i, locations[i].edgeCount);
+}
+
+void Graph::updateProbability(int node, int edgeCount) {
+
+	// get the sum of all the edge weights for the denominator
+	int denominator = getSumOfWeights(node, edgeCount);
+
+	for (int i = 0; i < edgeCount; i++) {
+		// get the pherimone weighter with alpha
+		double weightedPheremone = pow(locations[node].edges[i].pheremone, alpha);
+
+		// get the distance weighted with beta
+		double weightedDistance = pow((1.0 / (double)locations[node].edges[i].distance), beta);
+
+		// caculate the numerator
+		double numerator = weightedPheremone * weightedDistance;
+
+		// update the probability
+		if (denominator != 0)
+			locations[node].edges[i].probability = (numerator / denominator);
+	}
+}
+
+double Graph::getSumOfWeights(int node, int edgeCount) {
+	double weightedSum = 0;
+	for (int i = 0; i < edgeCount; i++) {
+		double weightedPheremone = pow(locations[node].edges[i].pheremone, alpha);
+		double weightedDistance = pow((1.0 / (double)locations[node].edges[i].distance), beta);
+		weightedSum = weightedSum + (weightedPheremone * weightedDistance);
+	}
+	return weightedSum;
+}
+
 double Graph::getPheremone(int pathSum) {
 	return TOTAL_PHEREMONE / pathSum;
 }
 
-void Graph::antsMove() {
-	for (int i = 0; i < TOTAL_ANTS; i++)
-		if (!antAtGoal(i))
-			antMove(i);
-}
-
-void Graph::antMove(int ant) {
-	// max pheremone
-	int maxProbability = 0;
-
-	// all the edges equal to max
-	vector<Edge> maxEdges;
-
-	// the list size of the edges list from the node
-	int edges = locations[ants[ant].location].edgeCount;
-
-	// gets the max probability
-	for (int i = 0; i < edges; i++) {
-		int probability = locations[ants[ant].location].edges[i].probability;
-		int toLocation = getNode(locations[ants[ant].location].edges[i].to);
-		if (!containNode(ant, toLocation) && probability > maxProbability)
-			maxProbability = probability;
-	}
-	
-	// stores all the edges equal to max probability into maxEdges
-	for (int i = 0; i < edges; i++) {
-		int probability = locations[ants[ant].location].edges[i].probability;
-		int toLocation = getNode(locations[ants[ant].location].edges[i].to);
-		if (!containNode(ant, toLocation) && probability == maxProbability)
-			maxEdges.push_back(locations[ants[ant].location].edges[i]);
-	}
-	
-	// grabs a random edge to travel
-	Edge edge = maxEdges[rand() % maxEdges.size()];
-
-	// the new values for the ant that moved
-	int newLocation = getNode(edge.to);
-	int newPathSum = ants[ant].pathSum + edge.distance;
-	
-	// updates that ants new location and path and path sum
-	updateAnt(ant, newLocation, newPathSum);	
-}
-
-bool Graph::containNode(int ant, int to) {
+bool Graph::containsNode(int ant, int to) {
 	for (int i = 0; i < ants[ant].path.size(); i++)
 		if (to == ants[ant].path[i])
 			return true;
 	return false;
 }
 
-void Graph::updateAnt(int ant, int newLocation, int newPathSum) {
-	ants[ant].pathSum = newPathSum;
-	ants[ant].location = newLocation;
-	ants[ant].path.push_back(newLocation);
-
-
-}
-
 bool Graph::allAntsAtGoal() {
-	for (int i = 0; i < TOTAL_ANTS; i++)
-		if (!antAtGoal(i))
+	for (int ant = 0; ant < TOTAL_ANTS; ant++)
+		if (!antAtGoal(ant))
 			return false;
 	return true;
 }
 
-bool Graph::antAtGoal(int i) {
-	return (locations[ants[i].location].locationName.compare("Iron Hills") != 0);
-}
-
-void Graph::initializeAnts() {
-	ants = new Ant[TOTAL_ANTS];
-	int start = getNode("Blue Mountains");
-	for (int i = 0; i < 10; i++) {
-		ants[i].location = 0;
-		ants[i].path.push_back(start);
-		ants[i].pathSum = 0;
-	}
-
-	if (0 == 0)
-	{
-		cout << endl;
-	}
+bool Graph::antAtGoal(int ant) {
+	return (locations[ants[ant].location].locationName.compare("Iron Hills") == 0);
 }
 
 // Parameters : from - the current location
@@ -313,15 +340,13 @@ string Graph::intToString(int i) {
 string Graph::toString() {
 	string ans = "";
 
-
-
+	
 	for (int a = 0; a < TOTAL_ANTS; a++) {
-	//ans = locations[].locationName;
-		for (int i = 1; i < ants[a].path.size(); i++)
-			ans += ", " + locations[ants[a].path[i]].locationName;
-
-		ans += "\nDistance: " + intToString(ants[a].pathSum);
-
+		ans += "\nDistance: " + intToString(ants[a].pathSum) + "\nPath: ";
+		for (int i = 0; i < ants[a].path.size() - 1; i++)
+			ans += locations[ants[a].path[i]].locationName + ", ";
+		ans += locations[ants[a].path[ants[a].path.size() - 1]].locationName;
+		ans += "\n";
 	}
 	return ans;
 }

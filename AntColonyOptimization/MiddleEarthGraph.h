@@ -87,6 +87,16 @@ private:
 	// Returns: the node with the name passed in
 	int getNode(string node);
 
+	// Operator overloader for a priority_queue to make it a min heap
+	struct CompareEdge : public binary_function<Edge, Edge, bool> {
+		bool operator()(const Edge lhs, const Edge rhs) const {
+			return lhs.probability < rhs.probability;
+		}
+	};
+
+	// max heap for grabbing smallest fn paths
+	
+
 	int alpha, beta, rho;
 
 
@@ -98,18 +108,21 @@ private:
 	void antsMove();
 	void antMove(int ant);
 	void updateAnt(int ant, int newLocation, int newPathSum);
-	bool containNode(int ant, int to);
+	bool containsNode(int ant, int to);
 
 	void addPheremones();
 	double getPheremone(int pathSum);
 	void addPheremone(int current, int next, int pathSum);
 	void decayPheremones();
 	void decayPheremone(int node, int edgeCount);
-	void updateProbabilies();
+	void updateProbabilities();
 	void updateProbability(int node, int edgeCount);
 	double getSumOfWeights(int node, int edgeCount);
-	
-	
+	Edge getNextEdge(int ant);
+	bool isDeadEnd(int ant, Edge edge);
+
+	int Graph::getDistance(int curr, int next);
+
 public:
 	// Graph Constuctor
 	// Parameters: nodesWithDistances - take a specificly formatted file's name and 

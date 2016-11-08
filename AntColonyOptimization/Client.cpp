@@ -51,7 +51,8 @@ int main() {
 		// Print results!
 		fout << middleEarth.toString();
 		cout << middleEarth.toString();
-
+		int x;
+		cin >> x;
 		// Close the stream
 		fout.close();
 
