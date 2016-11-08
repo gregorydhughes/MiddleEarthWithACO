@@ -42,8 +42,8 @@ void Graph::runACO(double alpha, double beta, double rho) {
 	this->beta = beta;
 	this->rho = rho;
 
-	void initializeAnts();
-	void antCycles();
+	initializeAnts();
+	antCycles();
 	
 }
 
@@ -215,6 +215,11 @@ void Graph::initializeAnts() {
 		ants[i].path.push_back(start);
 		ants[i].pathSum = 0;
 	}
+
+	if (0 == 0)
+	{
+		cout << endl;
+	}
 }
 
 // Parameters : from - the current location
@@ -306,12 +311,17 @@ string Graph::intToString(int i) {
 // Post-Condition: Builds a string of all the node data and prints
 // Returns: printLocs - the constructed string of data
 string Graph::toString() {
-	string ans;
+	string ans = "";
 
-	ans = locations[0].locationName;
 
-	for (int i = 1; i < MAX_LOCATIONS; i++)
-		ans += ", " + locations[i].locationName;
-	
+
+	for (int a = 0; a < TOTAL_ANTS; a++) {
+	//ans = locations[].locationName;
+		for (int i = 1; i < ants[a].path.size(); i++)
+			ans += ", " + locations[ants[a].path[i]].locationName;
+
+		ans += "\nDistance: " + intToString(ants[a].pathSum);
+
+	}
 	return ans;
 }
