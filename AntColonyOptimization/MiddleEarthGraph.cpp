@@ -39,12 +39,12 @@ Graph::Graph(string nodesWithDistances) {
 
 void Graph::runACO(double alpha, double beta, double rho) {
 	int x;
+
 	this->alpha = alpha;
 	this->beta = beta;
 	this->rho = rho;
 
-	antCycles();
-	
+	antCycles();	
 }
 
 void Graph::initializeAnts() {
@@ -121,35 +121,33 @@ void Graph::antMove(int ant) {
 
 Graph::Edge Graph::getNextEdge(int ant) {
 	
-		priority_queue<Edge, vector<Edge>, CompareEdge> edges;
-		int size = locations[ants[ant].location].edgeCount;
+	priority_queue<Edge, vector<Edge>, CompareEdge> edges;
+	int size = locations[ants[ant].location].edgeCount;
 
-		for (int i = 0; i < size; i++) {
-			if (locations[ants[ant].location].edges[i].to.compare("Iron Hills") == 0) {
-				return locations[ants[ant].location].edges[i];
-			}
-			edges.push(locations[ants[ant].location].edges[i]);
+	for (int i = 0; i < size; i++) {
+		if (locations[ants[ant].location].edges[i].to.compare("Iron Hills") == 0) {
+			return locations[ants[ant].location].edges[i];
 		}
+		edges.push(locations[ants[ant].location].edges[i]);
+	}
 
-		Edge edge;
+	Edge edge;
+	
+	bool empty = false;
 
-		bool empty = false;
+	do {
+		if (edges.empty())
+			break;
 
-		do {
-			if (edges.empty())
-				break;
-
-			edge = edges.top();
-			edges.pop();
-
-			if (edge.to.compare("Iron Hills") == 0) {
-				return edge;
-			}
+		edge = edges.top();
+		edges.pop();
+		
+		if (edge.to.compare("Iron Hills") == 0)
+			return edge;
 			
-			if (!isDeadEnd(ant, edge) && !containsNode(ant, getNode(edge.to)))				
-				if (edges.empty() || ((double)rand() / (RAND_MAX)) <= edge.probability) {
-					return edge;
-				}
+		if (!isDeadEnd(ant, edge) && !containsNode(ant, getNode(edge.to)))				
+			if (edges.empty() || ((double)rand() / (RAND_MAX)) <= edge.probability)
+				return edge;
 			
 		} while (isDeadEnd(ant, edge) || containsNode(ant, getNode(edge.to)));
 		
@@ -162,7 +160,7 @@ Graph::Edge Graph::getNextEdge(int ant) {
 			return e;
 		}
 
-		return edge;
+	return edge;
 }
 
 int Graph::getDistance(int curr, int next) {
