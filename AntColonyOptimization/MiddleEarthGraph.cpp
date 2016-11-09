@@ -63,7 +63,7 @@ void Graph::antCycles() {
 	while (!allAntsAtGoal())
 		firstMove();
 	for (int i = 1; i < CYCLES; i++) {
-		srand(i * 2);		
+				
 		addPheremones();
 		decayPheremones();
 		updateProbabilities();
