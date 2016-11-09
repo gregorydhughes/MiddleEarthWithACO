@@ -34,7 +34,7 @@ Graph::Graph(string nodesWithDistances) {
 		addNode(name, stringToInt(currentNode));
 	}
 
-	srand(time(NULL));
+	
 }
 
 void Graph::runACO(double alpha, double beta, double rho) {
@@ -43,7 +43,6 @@ void Graph::runACO(double alpha, double beta, double rho) {
 	this->beta = beta;
 	this->rho = rho;
 
-	initializeAnts();
 	antCycles();
 	
 }
@@ -54,25 +53,58 @@ void Graph::initializeAnts() {
 	for (int i = 0; i < TOTAL_ANTS; i++) {
 		ants[i].location = start;
 		ants[i].path.push_back(start);
+		ants[i].actualPath.push_back(start);
 		ants[i].pathSum = 0;
 	}
 }
 
 void Graph::antCycles() {
-
-	for (int i = 0; i < CYCLES; i++) {
+	initializeAnts();
+	while (!allAntsAtGoal())
+		firstMove();
+	for (int i = 1; i < CYCLES; i++) {
+		srand(i * 2);		
 		addPheremones();
 		decayPheremones();
 		updateProbabilities();
+
+		initializeAnts();
 
 		while (!allAntsAtGoal())
 			antsMove();		
 	}
 }
 
+void Graph::firstMove() {
+	for (int ant = 0; ant < TOTAL_ANTS; ant++) {
+		
+		while (!antAtGoal(ant)) {			
+			Edge edge;
+			
+			int size = locations[ants[ant].location].edgeCount;
+
+			bool moved = false;
+
+			for (int i = 0; i < size; i++) {
+				edge = locations[ants[ant].location].edges[i];
+				if (edge.to.compare("Iron Hills") == 0) {
+					updateAnt(ant, getNode(edge.to), ants[ant].pathSum + edge.distance);
+					moved = true;
+					break;
+				}
+			}
+
+			if (!moved) {
+				edge = locations[ants[ant].location].edges[rand() % size];
+				updateAnt(ant, getNode(edge.to), ants[ant].pathSum + edge.distance);
+			}
+		}
+	}
+}
+
 void Graph::antsMove() {
 	for (int i = 0; i < TOTAL_ANTS; i++)
-		if (!antAtGoal(i))
+		while (!antAtGoal(i))
 			antMove(i);
 }
 
@@ -89,39 +121,48 @@ void Graph::antMove(int ant) {
 
 Graph::Edge Graph::getNextEdge(int ant) {
 	
-	priority_queue<Edge, vector<Edge>, CompareEdge> edges;
+		priority_queue<Edge, vector<Edge>, CompareEdge> edges;
+		int size = locations[ants[ant].location].edgeCount;
 
-	int size = locations[ants[ant].location].edgeCount;
+		for (int i = 0; i < size; i++) {
+			if (locations[ants[ant].location].edges[i].to.compare("Iron Hills") == 0) {
+				return locations[ants[ant].location].edges[i];
+			}
+			edges.push(locations[ants[ant].location].edges[i]);
+		}
 
-	for (int i = 0; i < size; i++) {
-		if (locations[ants[ant].location].edges[i].to.compare("Iron Hills") == 0)
-			return locations[ants[ant].location].edges[i];
-		edges.push(locations[ants[ant].location].edges[i]);
-	}
+		Edge edge;
 
-	Edge edge;	
-	
-	bool empty = false;
-	do {
-		if (edge.to.compare("Iron Hills") == 0)
-			return edge;
-		if (edges.empty())
-			break;
-		edge = edges.top();	
-		edges.pop();		
-	} while (isDeadEnd(ant, edge) || containsNode(ant, getNode(edge.to)));
+		bool empty = false;
 
+		do {
+			if (edges.empty())
+				break;
 
-	if (isDeadEnd(ant, edge)) {
-		Edge e;
-		e.distance = getDistance(ants[ant].location, ants[ant].path[ants[ant].path.size() - 2]);
-		e.pheremone = 0;
-		e.probability = 0;
-		e.to = locations[ants[ant].path[ants[ant].path.size() - 2]].locationName;
-		return e;
-	}
+			edge = edges.top();
+			edges.pop();
 
-	return edge;
+			if (edge.to.compare("Iron Hills") == 0) {
+				return edge;
+			}
+			
+			if (!isDeadEnd(ant, edge) && !containsNode(ant, getNode(edge.to)))				
+				if (edges.empty() || ((double)rand() / (RAND_MAX)) <= edge.probability) {
+					return edge;
+				}
+			
+		} while (isDeadEnd(ant, edge) || containsNode(ant, getNode(edge.to)));
+		
+		if (isDeadEnd(ant, edge)) {
+			Edge e;
+			e.distance = getDistance(ants[ant].location, ants[ant].path[ants[ant].path.size() - 2]);
+			e.pheremone = 0;
+			e.probability = 0;
+			e.to = locations[ants[ant].path[ants[ant].path.size() - 2]].locationName;
+			return e;
+		}
+
+		return edge;
 }
 
 int Graph::getDistance(int curr, int next) {
@@ -145,8 +186,10 @@ bool Graph::isDeadEnd(int ant, Edge edge) {
 
 void Graph::updateAnt(int ant, int newLocation, int newPathSum) {
 	ants[ant].pathSum = newPathSum;
-	ants[ant].location = newLocation;
-	ants[ant].path.push_back(newLocation);
+	ants[ant].location = newLocation;	
+	if (!containsNode(ant, newLocation))
+		ants[ant].path.push_back(newLocation);
+	ants[ant].actualPath.push_back(newLocation);
 }
 
 void Graph::addPheremones() {
@@ -187,8 +230,10 @@ void Graph::decayPheremones() {
 }
 
 void Graph::decayPheremone(int node, int edgeCount) {
+	if (rho >= 1)
+		rho = .95;
 	for (int i = 0; i < edgeCount; i++)
-		locations[node].edges[i].pheremone *= (1 - rho);
+		locations[node].edges[i].pheremone *= ((double)1.0 - rho);
 }
 
 void Graph::updateProbabilities() {
@@ -197,10 +242,9 @@ void Graph::updateProbabilities() {
 }
 
 void Graph::updateProbability(int node, int edgeCount) {
-
+	
 	// get the sum of all the edge weights for the denominator
-	int denominator = getSumOfWeights(node, edgeCount);
-
+	double denominator = getSumOfWeights(node, edgeCount);
 	for (int i = 0; i < edgeCount; i++) {
 		// get the pherimone weighter with alpha
 		double weightedPheremone = pow(locations[node].edges[i].pheremone, alpha);
@@ -218,7 +262,7 @@ void Graph::updateProbability(int node, int edgeCount) {
 }
 
 double Graph::getSumOfWeights(int node, int edgeCount) {
-	double weightedSum = 0;
+	double weightedSum = 0.0;
 	for (int i = 0; i < edgeCount; i++) {
 		double weightedPheremone = pow(locations[node].edges[i].pheremone, alpha);
 		double weightedDistance = pow((1.0 / (double)locations[node].edges[i].distance), beta);
@@ -228,7 +272,7 @@ double Graph::getSumOfWeights(int node, int edgeCount) {
 }
 
 double Graph::getPheremone(int pathSum) {
-	return TOTAL_PHEREMONE / pathSum;
+	return TOTAL_PHEREMONE / (double)pathSum;
 }
 
 bool Graph::containsNode(int ant, int to) {
@@ -259,8 +303,8 @@ void Graph::addEdge(string from, string to, int d) {
 	// I assume you want to do this for all the edges? and not just the edge count
 	locations[temp].edges[locations[temp].edgeCount].to = to;
 	locations[temp].edges[locations[temp].edgeCount].distance = d;
-	locations[temp].edges[locations[temp].edgeCount].pheremone = 0;
-	locations[temp].edges[locations[temp].edgeCount].probability = 0;
+	locations[temp].edges[locations[temp].edgeCount].pheremone = 0.1;	
+	locations[temp].edges[locations[temp].edgeCount].probability = 0.0;
 	locations[temp].edgeCount++;
 }
 
@@ -343,9 +387,9 @@ string Graph::toString() {
 	
 	for (int a = 0; a < TOTAL_ANTS; a++) {
 		ans += "\nDistance: " + intToString(ants[a].pathSum) + "\nPath: ";
-		for (int i = 0; i < ants[a].path.size() - 1; i++)
-			ans += locations[ants[a].path[i]].locationName + ", ";
-		ans += locations[ants[a].path[ants[a].path.size() - 1]].locationName;
+		for (int i = 0; i < ants[a].actualPath.size() - 1; i++)
+			ans += locations[ants[a].actualPath[i]].locationName + ", ";
+		ans += locations[ants[a].actualPath[ants[a].actualPath.size() - 1]].locationName;
 		ans += "\n";
 	}
 	return ans;

@@ -21,8 +21,8 @@
 using namespace std;
 
 const string GOAL_LOCATION = "Iron Hills";
-const int TOTAL_PHEREMONE = 100;
-const int CYCLES = 25;
+const double TOTAL_PHEREMONE = 100;
+const int CYCLES = 50;
 const int TOTAL_ANTS = 10;
 
 const int MAX_LOCATIONS = 25;
@@ -50,10 +50,12 @@ private:
 
 	struct Ant {
 		int location;
+		vector<int> actualPath;
 		vector<int> path;
 		int pathSum;	
 	};
-		
+	
+	
 	Ant *ants;
 
 	int locCounter;
@@ -97,9 +99,9 @@ private:
 	// max heap for grabbing smallest fn paths
 	
 
-	int alpha, beta, rho;
+	double alpha, beta, rho;
 
-
+	void firstMove();
 
 	void initializeAnts();	
 	void antCycles();
