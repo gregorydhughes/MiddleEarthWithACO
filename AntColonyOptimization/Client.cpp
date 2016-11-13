@@ -10,8 +10,12 @@
 #include "MiddleEarthGraph.h"
 #include "Heuristics.h"
 #include "ExceptionClass.h"
+#include <ctime>
 
 using namespace std;
+
+// Our favorite prime number
+const int VERY_LARGE_PRIME = 94121;
 
 // this is a file of all the nodes with distance from goals
 const string NODES_WITH_DISTANCES_TO_IRON_HILLS = "distancetable.txt";
@@ -35,7 +39,7 @@ int main() {
 		Graph middleEarth = Graph(NODES_WITH_DISTANCES_TO_IRON_HILLS);
 		middleEarth.addEdges(CONNECTIONS_BETWEEN_NODES);
 
-		srand(37);
+		srand(time(NULL) * VERY_LARGE_PRIME);
 
 		int alpha, beta, rho;
 		
@@ -53,8 +57,10 @@ int main() {
 		// Print results!
 		fout << middleEarth.toString();
 		cout << middleEarth.toString();
-		int x;
-		cin >> x;
+		
+		// pause
+		cin.get();
+
 		// Close the stream
 		fout.close();
 

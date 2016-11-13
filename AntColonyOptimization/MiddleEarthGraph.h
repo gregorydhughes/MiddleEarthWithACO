@@ -8,7 +8,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <time.h>
 #include <fstream>
 #include <string>
 #include <sstream>
