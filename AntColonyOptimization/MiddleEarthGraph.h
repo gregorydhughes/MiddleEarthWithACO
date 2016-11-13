@@ -29,8 +29,23 @@ const int MAX_LOCATIONS = 25;
 
 class Graph {
 
-private:
+public:
+	// Graph Constuctor
+	// Parameters: nodesWithDistances - take a specificly formatted file's name and 
+	//                                  builds a graph with it
+	Graph(string nodesWithDistances);	
+
+	// Parameters: nodeConnData - a file of a specific format for adding edges
+	void addEdges(string nodeConnData);
+
+	//
+	void runACO(double alpha, double beta, double rho);
 	
+	// Post-Condition: Builds a string of all the node data and prints
+	// Returns: printLocs - the constructed string of data
+	string toString();
+
+private:
 	// Edge with opposite location, distance, road quality and risk level 
 	struct Edge {
 		string to;
@@ -48,46 +63,13 @@ private:
 		bool visited;
 	};
 
+	// holds the values for each ant
 	struct Ant {
 		int location;
 		vector<int> actualPath;
 		vector<int> path;
-		int pathSum;	
+		int pathSum;
 	};
-	
-	
-	Ant *ants;
-
-	int locCounter;
-	Node locations[MAX_LOCATIONS];
-
-	// Parameters: i - the int to be converted to a string
-	// Returns: the string of a passed in int
-	string intToString(int i);
-
-	// Parameters: s - a string to convert to an int
-	// Returns: an int that was converted from a string
-	int stringToInt(string s);
-
-	// Parameters: location - the name of the node being added
-	//             distance - the distance from that current node
-	//                        to the destination
-	// Post-Condition: creates a new node adds it to the locations list
-	//                 and increments locCounter
-	void addNode(string location, int distance);
-
-	// Returns: int representing the amount of nodes in graph
-	int getSize();
-
-	// Parameters : from - the current location
-	//                to - the location the edge goes to
-	//                 d - the distance of the edge
-	// Post-Condition: addes an edge to the from node
-	void addEdge(string from, string to, int d);
-
-	// Parameters: node - string name of the node wanted
-	// Returns: the node with the name passed in
-	int getNode(string node);
 
 	// Operator overloader for a priority_queue to make it a min heap
 	struct CompareEdge : public binary_function<Edge, Edge, bool> {
@@ -96,49 +78,112 @@ private:
 		}
 	};
 
-	// max heap for grabbing smallest fn paths
+	/////////////////////////////////////////////////////////////////////////
+	//                        Private Data Members                         //
+	/////////////////////////////////////////////////////////////////////////
 	
-
+	// PDMs for alpha beta and rho
 	double alpha, beta, rho;
 
+	// PDM to hold ants
+	Ant *ants;
+
+	// counter to hold location
+	int locCounter;
+
+	// Array of traveled locations
+	Node locations[MAX_LOCATIONS];
+
+	/////////////////////////////////////////////////////////////////////////
+	//                       Private Methods                               //
+	/////////////////////////////////////////////////////////////////////////
+	
+	// Initialize ants PDM
+	void initializeAnts();
+
+	// cyle ants on map
+	void antCycles();
+	
+	// Initializes first move of ants
 	void firstMove();
 
-	void initializeAnts();	
-	void antCycles();
-	bool allAntsAtGoal();
-	bool antAtGoal(int i);
+	// move ants
 	void antsMove();
+
+	// move ant based on integer location 
 	void antMove(int ant);
+		
+	// returns the next edge for a given ant
+	Edge getNextEdge(int ant);
+	
+	// returns the distance
+	int getDistance(int curr, int next);
+	
+	// predicates if a given ant on a given edge is at a dead end
+	bool isDeadEnd(int ant, Edge edge);
+	
+	// udate the given ant with new location and path sum
 	void updateAnt(int ant, int newLocation, int newPathSum);
+	
+	// increases pheromone level accross the map
+	void addPheremones();
+
+	// increases pheromone for the path
+	void addPheremone(int current, int next, int pathSum);
+
+	// decays pheromone on the map
+	void decayPheremones();
+
+	// decay pheromone for the path
+	void decayPheremone(int node, int edgeCount);
+
+	// calculates the new probability
+	void updateProbabilities();
+
+	// updates probability for a given node
+	void updateProbability(int node, int edgeCount);
+
+	// returns the sum of the weights
+	double getSumOfWeights(int node, int edgeCount);
+
+	// returns the phermone 
+	double getPheremone(int pathSum);
+
+	// predicates if an ants path contains a node(city)
 	bool containsNode(int ant, int to);
 
-	void addPheremones();
-	double getPheremone(int pathSum);
-	void addPheremone(int current, int next, int pathSum);
-	void decayPheremones();
-	void decayPheremone(int node, int edgeCount);
-	void updateProbabilities();
-	void updateProbability(int node, int edgeCount);
-	double getSumOfWeights(int node, int edgeCount);
-	Edge getNextEdge(int ant);
-	bool isDeadEnd(int ant, Edge edge);
+	// predicates if all ants in PDM are at goal node
+	bool allAntsAtGoal();
 
-	int Graph::getDistance(int curr, int next);
+	// predicates if given ant i is at goal node
+	bool antAtGoal(int i);
 
-public:
-	// Graph Constuctor
-	// Parameters: nodesWithDistances - take a specificly formatted file's name and 
-	//                                  builds a graph with it
-	Graph(string nodesWithDistances);	
+	// Parameters : from - the current location
+	//                to - the location the edge goes to
+	//                 d - the distance of the edge
+	// Post-Condition: addes an edge to the from node
+	void addEdge(string from, string to, int d);
 
-	// Parameters: nodeConnData - a file of a specific format for adding edges
-	void addEdges(string nodeConnData);
+	// Parameters: s - a string to convert to an int
+	// Returns: an int that was converted from a string
+	int stringToInt(string s);
 
-	//
-	void runACO(double alpha, double beta, double rho);
-	
-	// Post-Condition: Builds a string of all the node data and prints
-	// Returns: printLocs - the constructed string of data
-	string toString();
+	// Returns: int representing the amount of nodes in graph
+	int getSize();
+
+	// Parameters: node - string name of the node wanted
+	// Returns: the node with the name passed in
+	int getNode(string node);
+
+	// Parameters: location - the name of the node being added
+	//             distance - the distance from that current node
+	//                        to the destination
+	// Post-Condition: creates a new node adds it to the locations list
+	//                 and increments locCounter
+	void addNode(string location, int distance);
+
+	// Parameters: i - the int to be converted to a string
+	// Returns: the string of a passed in int
+	string intToString(int i);
 
 };

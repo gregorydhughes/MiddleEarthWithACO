@@ -11,6 +11,10 @@
 
 using namespace std;
 
+///////////////////////////////////////////////////////////////////////////////
+//                              Public methods                               //
+///////////////////////////////////////////////////////////////////////////////
+
 // Graph Constuctor
 // Parameters: nodesWithDistances - take a specificly formatted file's name and 
 //                                  builds a graph with it
@@ -37,6 +41,34 @@ Graph::Graph(string nodesWithDistances) {
 	
 }
 
+// Parameters: nodeConnData - a file of a specific format for adding edges
+void Graph::addEdges(string nodeConnData) {
+	string from;
+	ifstream inFile;
+	inFile.open(nodeConnData.c_str());
+
+	for (int t = 0; t < 23; t++) {
+		getline(inFile, from);
+		string total;
+		getline(inFile, total);
+		int x = stringToInt(total);
+		int d;
+		string to;
+
+		for (int i = 0; i < x; i++) {
+			getline(inFile, to);
+			string temp;
+			getline(inFile, temp);
+			d = stringToInt(temp.substr(0, temp.find(" ")));
+			temp.erase(0, temp.find(" ") + 1);
+			temp.erase(0, temp.find(" ") + 1);
+
+			addEdge(from, to, d);
+			addEdge(to, from, d);
+		}
+	}
+}
+
 void Graph::runACO(double alpha, double beta, double rho) {
 	int x;
 
@@ -47,6 +79,27 @@ void Graph::runACO(double alpha, double beta, double rho) {
 	antCycles();	
 }
 
+// Post-Condition: Builds a string of all the node data and prints
+// Returns: printLocs - the constructed string of data
+string Graph::toString() {
+	string ans = "";
+
+
+	for (int a = 0; a < TOTAL_ANTS; a++) {
+		ans += "\nDistance: " + intToString(ants[a].pathSum) + "\nPath: ";
+		for (int i = 0; i < ants[a].actualPath.size() - 1; i++)
+			ans += locations[ants[a].actualPath[i]].locationName + ", ";
+		ans += locations[ants[a].actualPath[ants[a].actualPath.size() - 1]].locationName;
+		ans += "\n";
+	}
+	return ans;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                             Private methods                               //
+///////////////////////////////////////////////////////////////////////////////
+
+// Initialize ants PDM
 void Graph::initializeAnts() {
 	ants = new Ant[TOTAL_ANTS];
 	int start = getNode("Blue Mountains");
@@ -58,6 +111,7 @@ void Graph::initializeAnts() {
 	}
 }
 
+// cyle ants on map
 void Graph::antCycles() {
 	initializeAnts();
 	while (!allAntsAtGoal())
@@ -75,6 +129,7 @@ void Graph::antCycles() {
 	}
 }
 
+// Initializes first move of ants
 void Graph::firstMove() {
 	for (int ant = 0; ant < TOTAL_ANTS; ant++) {
 		
@@ -102,12 +157,14 @@ void Graph::firstMove() {
 	}
 }
 
+// move ants
 void Graph::antsMove() {
 	for (int i = 0; i < TOTAL_ANTS; i++)
 		while (!antAtGoal(i))
 			antMove(i);
 }
 
+// move ant based on integer location 
 void Graph::antMove(int ant) {	
 	Edge edge = getNextEdge(ant);
 	
@@ -119,6 +176,7 @@ void Graph::antMove(int ant) {
 	updateAnt(ant, newLocation, newPathSum);
 }
 
+// returns the next edge for a given ant
 Graph::Edge Graph::getNextEdge(int ant) {
 	
 	priority_queue<Edge, vector<Edge>, CompareEdge> edges;
@@ -163,6 +221,7 @@ Graph::Edge Graph::getNextEdge(int ant) {
 	return edge;
 }
 
+// returns the distance
 int Graph::getDistance(int curr, int next) {
 	int size = locations[curr].edgeCount;
 	for (int i = 0; i < size; i++) {
@@ -171,6 +230,7 @@ int Graph::getDistance(int curr, int next) {
 	}
 }
 
+// predicates if a given ant on a given edge is at a dead end
 bool Graph::isDeadEnd(int ant, Edge edge) {
 	int size = locations[getNode(edge.to)].edgeCount;
 	int loc = getNode(edge.to);
@@ -182,6 +242,7 @@ bool Graph::isDeadEnd(int ant, Edge edge) {
 	return true;
 }
 
+// udate the given ant with new location and path sum
 void Graph::updateAnt(int ant, int newLocation, int newPathSum) {
 	ants[ant].pathSum = newPathSum;
 	ants[ant].location = newLocation;	
@@ -190,6 +251,7 @@ void Graph::updateAnt(int ant, int newLocation, int newPathSum) {
 	ants[ant].actualPath.push_back(newLocation);
 }
 
+// increases pheromone level accross the map
 void Graph::addPheremones() {
 	// Update pheremones then decay for each ants path
 	for (int ant = 0; ant < TOTAL_ANTS; ant++) {
@@ -213,6 +275,7 @@ void Graph::addPheremones() {
 	}
 }
 
+// increases pheromone for the path
 void Graph::addPheremone(int current, int next, int pathSum) {
 	int edgeSize = locations[current].edgeCount;
 	for (int i = 0; i < edgeSize; i++) {
@@ -222,11 +285,13 @@ void Graph::addPheremone(int current, int next, int pathSum) {
 	}
 }
 
+// decays pheromone on the map
 void Graph::decayPheremones() {
 	for (int i = 0; i < locCounter; i++)
 		decayPheremone(i, locations[i].edgeCount);
 }
 
+// decay pheromone for the path
 void Graph::decayPheremone(int node, int edgeCount) {
 	if (rho >= 1)
 		rho = .95;
@@ -234,11 +299,13 @@ void Graph::decayPheremone(int node, int edgeCount) {
 		locations[node].edges[i].pheremone *= ((double)1.0 - rho);
 }
 
+// calculates the new probability
 void Graph::updateProbabilities() {
 	for (int i = 0; i < locCounter; i++)
 		updateProbability(i, locations[i].edgeCount);
 }
 
+// updates probability for a given node
 void Graph::updateProbability(int node, int edgeCount) {
 	
 	// get the sum of all the edge weights for the denominator
@@ -259,6 +326,7 @@ void Graph::updateProbability(int node, int edgeCount) {
 	}
 }
 
+// returns the sum of the weights
 double Graph::getSumOfWeights(int node, int edgeCount) {
 	double weightedSum = 0.0;
 	for (int i = 0; i < edgeCount; i++) {
@@ -269,10 +337,12 @@ double Graph::getSumOfWeights(int node, int edgeCount) {
 	return weightedSum;
 }
 
+// returns the phermone
 double Graph::getPheremone(int pathSum) {
 	return TOTAL_PHEREMONE / (double)pathSum;
 }
 
+// predicates if an ants path contains a node(city)
 bool Graph::containsNode(int ant, int to) {
 	for (int i = 0; i < ants[ant].path.size(); i++)
 		if (to == ants[ant].path[i])
@@ -280,6 +350,7 @@ bool Graph::containsNode(int ant, int to) {
 	return false;
 }
 
+// predicates if all ants in PDM are at goal node
 bool Graph::allAntsAtGoal() {
 	for (int ant = 0; ant < TOTAL_ANTS; ant++)
 		if (!antAtGoal(ant))
@@ -287,6 +358,7 @@ bool Graph::allAntsAtGoal() {
 	return true;
 }
 
+// predicates if given ant i is at goal node
 bool Graph::antAtGoal(int ant) {
 	return (locations[ants[ant].location].locationName.compare("Iron Hills") == 0);
 }
@@ -306,33 +378,7 @@ void Graph::addEdge(string from, string to, int d) {
 	locations[temp].edgeCount++;
 }
 
-// Parameters: nodeConnData - a file of a specific format for adding edges
-void Graph::addEdges(string nodeConnData) {
-	string from;
-	ifstream inFile;
-	inFile.open(nodeConnData.c_str());
 
-	for (int t = 0; t < 23; t++) {
-		getline(inFile, from);
-		string total;
-		getline(inFile, total);
-		int x = stringToInt(total);
-		int d;
-		string to;
-
-		for (int i = 0; i < x; i++) {
-			getline(inFile, to);
-			string temp;
-			getline(inFile, temp);
-			d = stringToInt(temp.substr(0, temp.find(" ")));
-			temp.erase(0, temp.find(" ") + 1);
-			temp.erase(0, temp.find(" ") + 1);
-
-			addEdge(from, to, d);
-			addEdge(to, from, d);
-		}
-	}
-}
 
 // Parameters: s - a string to convert to an int
 // Returns: an int that was converted from a string
@@ -377,18 +423,3 @@ string Graph::intToString(int i) {
 	return ss.str();
 }
 
-// Post-Condition: Builds a string of all the node data and prints
-// Returns: printLocs - the constructed string of data
-string Graph::toString() {
-	string ans = "";
-
-	
-	for (int a = 0; a < TOTAL_ANTS; a++) {
-		ans += "\nDistance: " + intToString(ants[a].pathSum) + "\nPath: ";
-		for (int i = 0; i < ants[a].actualPath.size() - 1; i++)
-			ans += locations[ants[a].actualPath[i]].locationName + ", ";
-		ans += locations[ants[a].actualPath[ants[a].actualPath.size() - 1]].locationName;
-		ans += "\n";
-	}
-	return ans;
-}
